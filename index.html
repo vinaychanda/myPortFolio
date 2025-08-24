@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vinay Chanda - Engineering Intelligence</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg-color: #000005;
+            --primary-glow: #ff4b1f; /* Crimson */
+            --secondary-glow: #ffca28; /* Gold */
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --glass-bg: rgba(10, 10, 20, 0.4);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --prompt-color: #ffd700; /* Gold for prompt */
+        }
+        html {
+            scroll-behavior: smooth;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+        #hero-canvas {
+            position: fixed; 
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            z-index: 1;
+        }
+        .content-wrapper {
+            position: relative;
+            z-index: 2;
+            opacity: 0;
+            transition: opacity 1s ease-in;
+        }
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 1rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .glass-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 0 30px rgba(255, 75, 31, 0.2), 0 0 50px rgba(255, 202, 40, 0.1);
+        }
+        .nav-link {
+            position: relative;
+            color: var(--text-secondary);
+            transition: color 0.3s ease;
+        }
+        .nav-link:hover {
+            color: var(--primary-glow);
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--primary-glow);
+            transition: width 0.3s ease;
+        }
+        .nav-link:hover::after, .nav-link.active::after {
+            width: 100%;
+        }
+        .section {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+        .section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .glow-button {
+            background: linear-gradient(90deg, var(--primary-glow), var(--secondary-glow));
+            color: #000;
+            font-weight: 700;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .glow-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px var(--primary-glow), 0 0 30px var(--secondary-glow);
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 1rem;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--primary-glow), var(--secondary-glow));
+            opacity: 0.3;
+        }
+        .timeline-item .dot {
+            position: absolute;
+            left: 0;
+            top: 0.25rem;
+            width: 1.25rem;
+            height: 1.25rem;
+            border-radius: 50%;
+            background-color: var(--bg-color);
+            border: 3px solid var(--primary-glow);
+            transform: translateX(-50%);
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+        .timeline-item:hover .dot {
+            background-color: var(--primary-glow);
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        #loader {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.75s ease-out;
+            font-family: 'Fira Code', monospace;
+        }
+        .orb-container {
+            perspective: 1000px;
+        }
+        .orb {
+            width: 150px;
+            height: 150px;
+            position: relative;
+            transform-style: preserve-3d;
+            animation: orb-rotate 20s infinite linear;
+        }
+        .orb-ring {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 2px solid var(--primary-glow);
+            border-radius: 50%;
+            box-shadow: 0 0 20px var(--primary-glow), inset 0 0 20px var(--primary-glow);
+            animation: orb-unfold 4s ease-in-out infinite alternate;
+        }
+        .orb-ring:nth-child(2) {
+            transform: rotateY(60deg);
+            animation-delay: -1s;
+            border-color: var(--secondary-glow);
+            box-shadow: 0 0 20px var(--secondary-glow), inset 0 0 20px var(--secondary-glow);
+        }
+        .orb-ring:nth-child(3) {
+            transform: rotateY(-60deg);
+            animation-delay: -2s;
+        }
+        .orb-core {
+            width: 30px;
+            height: 30px;
+            background: var(--primary-glow);
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 30px var(--primary-glow), 0 0 50px var(--primary-glow);
+            animation: core-pulse 2s infinite ease-in-out;
+        }
+        @keyframes orb-rotate {
+            from { transform: rotateY(0deg) rotateX(20deg); }
+            to { transform: rotateY(360deg) rotateX(20deg); }
+        }
+        @keyframes orb-unfold {
+            from { transform: scale(0.1) rotateY(0deg); opacity: 0; }
+            to { transform: scale(1) rotateY(360deg); opacity: 1; }
+        }
+        @keyframes core-pulse {
+            0% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.2); box-shadow: 0 0 40px var(--primary-glow), 0 0 70px var(--primary-glow); }
+            100% { transform: translate(-50%, -50%) scale(1); }
+        }
+        .loader-text {
+            margin-top: 2rem;
+            color: var(--text-secondary);
+            letter-spacing: 0.2em;
+            font-size: 0.875rem;
+            min-height: 1.25rem;
+        }
+
+        #transition-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 999;
+            background-color: var(--bg-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 1;
+            transition: opacity 0.5s ease-out;
+            pointer-events: none;
+        }
+        .glitch-text {
+            font-family: 'Inter', sans-serif;
+            font-size: 5rem;
+            font-weight: 900;
+            letter-spacing: -0.05em;
+            color: var(--text-primary);
+            position: relative;
+            animation: glitch-scan 2s linear forwards;
+        }
+        .glitch-text::before,
+        .glitch-text::after {
+            content: 'Vinay Chanda';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-color);
+            overflow: hidden;
+        }
+        .glitch-text::before {
+            left: 2px;
+            text-shadow: -2px 0 var(--primary-glow);
+            animation: glitch-anim-1 1.5s infinite linear alternate-reverse;
+        }
+        .glitch-text::after {
+            left: -2px;
+            text-shadow: -2px 0 var(--secondary-glow);
+            animation: glitch-anim-2 1.5s infinite linear alternate-reverse;
+        }
+        @keyframes glitch-anim-1 {
+            0% { clip-path: inset(12% 0 85% 0); } 20% { clip-path: inset(78% 0 3% 0); } 40% { clip-path: inset(23% 0 45% 0); }
+            60% { clip-path: inset(50% 0 12% 0); } 80% { clip-path: inset(92% 0 5% 0); } 100% { clip-path: inset(34% 0 39% 0); }
+        }
+        @keyframes glitch-anim-2 {
+            0% { clip-path: inset(78% 0 10% 0); } 20% { clip-path: inset(5% 0 95% 0); } 40% { clip-path: inset(33% 0 15% 0); }
+            60% { clip-path: inset(80% 0 2% 0); } 80% { clip-path: inset(12% 0 75% 0); } 100% { clip-path: inset(54% 0 29% 0); }
+        }
+        @keyframes glitch-scan {
+            0% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; }
+        }
+
+        #project-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease-in-out;
+        }
+        #project-modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        #project-modal-content {
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: scale(0.95);
+            transition: transform 0.3s ease-in-out;
+        }
+        #project-modal-overlay.active #project-modal-content {
+            transform: scale(1);
+        }
+        .project-trigger {
+            cursor: pointer;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 3rem;
+        }
+        .prompt-char {
+            color: var(--prompt-color);
+            font-size: 2.25rem;
+            font-weight: 700;
+        }
+        .command-text {
+            font-family: 'Fira Code', monospace;
+            font-size: 2.25rem;
+            font-weight: 600;
+            color: var(--primary-glow);
+            white-space: nowrap;
+            overflow: hidden;
+            width: max-content;
+            max-width: 0;
+            border-right: .15em solid var(--primary-glow);
+        }
+        .section.visible .command-text {
+            animation:
+                typing 1.5s steps(var(--steps, 20), end) forwards,
+                blink-caret .75s step-end infinite 1.5s;
+        }
+        @keyframes typing {
+            from { max-width: 0 }
+            to { max-width: 100% }
+        }
+        @keyframes blink-caret {
+            from, to { border-color: var(--primary-glow) }
+            50% { border-color: transparent; }
+        }
+        .modal-tech-tag {
+            font-family: 'Fira Code', monospace;
+            background-color: rgba(255, 75, 31, 0.1);
+            color: var(--primary-glow);
+            font-size: 0.875rem;
+            font-weight: 500;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+        }
+
+        /* --- AI Assistant Chatbot --- */
+        #chat-fab {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 90;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(45deg, var(--primary-glow), var(--secondary-glow));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 0 25px var(--primary-glow);
+            animation: fab-pulse 2s infinite;
+            transition: transform 0.3s ease;
+        }
+        #chat-fab:hover {
+            transform: scale(1.1);
+            animation-play-state: paused;
+        }
+        @keyframes fab-pulse {
+            0% { box-shadow: 0 0 25px var(--primary-glow); }
+            50% { box-shadow: 0 0 40px var(--secondary-glow); }
+            100% { box-shadow: 0 0 25px var(--primary-glow); }
+        }
+        #chat-window {
+            position: fixed;
+            bottom: 7rem;
+            right: 2rem;
+            z-index: 90;
+            width: 350px;
+            height: 450px;
+            opacity: 0;
+            transform: translateY(20px);
+            pointer-events: none;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        #chat-window.active {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+        #chat-messages {
+            height: calc(100% - 90px);
+            overflow-y: auto;
+            font-family: 'Fira Code', monospace;
+        }
+        .chat-message {
+            max-width: 80%;
+            padding: 0.5rem 1rem;
+            border-radius: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        .user-message {
+            background-color: var(--primary-glow);
+            color: black;
+            align-self: flex-end;
+            border-bottom-right-radius: 0;
+        }
+        .bot-message {
+            background-color: #1a1a2e;
+            color: var(--text-primary);
+            align-self: flex-start;
+            border-bottom-left-radius: 0;
+        }
+        #chat-input {
+            background-color: rgba(0,0,0,0.3);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+    </style>
+</head>
+<body>
+    <div id="loader">
+        <div class="orb-container">
+            <div class="orb">
+                <div class="orb-ring"></div>
+                <div class="orb-ring"></div>
+                <div class="orb-ring"></div>
+                <div class="orb-core"></div>
+            </div>
+        </div>
+        <p class="loader-text" id="loader-text"></p>
+    </div>
+
+    <div id="transition-overlay" style="display: none;">
+        <h1 class="glitch-text">Vinay Chanda</h1>
+    </div>
+
+    <canvas id="hero-canvas"></canvas>
+    
+    <div class="content-wrapper">
+        <!-- Header -->
+        <header id="main-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300">
+            <div class="container mx-auto max-w-6xl px-4 md:px-8">
+                <nav class="flex items-center justify-between h-20">
+                    <a href="#" class="text-2xl font-bold tracking-wider">VC<span style="color: var(--primary-glow);">.</span></a>
+                    <div class="hidden md:flex items-center space-x-8">
+                        <a href="#about" class="nav-link active">About</a>
+                        <a href="#experience" class="nav-link">Experience</a>
+                        <a href="#projects" class="nav-link">Projects</a>
+                        <a href="#skills" class="nav-link">Skills</a>
+                        <a href="#contact" class="nav-link">Contact</a>
+                    </div>
+                    <button id="menu-btn" class="md:hidden text-white z-50">
+                        <i data-lucide="menu" class="w-7 h-7"></i>
+                    </button>
+                </nav>
+            </div>
+        </header>
+        
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="fixed inset-0 bg-black bg-opacity-90 backdrop-blur-lg flex-col items-center justify-center space-y-8 text-2xl z-40 hidden">
+            <a href="#about" class="nav-link">About</a>
+            <a href="#experience" class="nav-link">Experience</a>
+            <a href="#projects" class="nav-link">Projects</a>
+            <a href="#skills" class="nav-link">Skills</a>
+            <a href="#contact" class="nav-link">Contact</a>
+        </div>
+
+        <!-- Hero Section -->
+        <section id="hero" class="h-screen flex items-center justify-center text-center">
+            <div class="max-w-3xl px-4">
+                <h1 class="text-5xl md:text-7xl font-black tracking-tighter mb-4 leading-tight" style="text-shadow: 0 0 20px rgba(255, 75, 31, 0.3);">
+                    Vinay Chanda
+                </h1>
+                <p class="text-xl md:text-2xl text-text-secondary mb-8">
+                    Architecting the Future with AI & Scalable Software Systems
+                </p>
+                <a href="#projects" class="glow-button inline-block">View My Work</a>
+            </div>
+        </section>
+
+        <div class="container mx-auto max-w-6xl px-4 md:px-8 space-y-32 py-24">
+            <!-- About Section -->
+            <section id="about" class="section">
+                <div class="section-header">
+                    <span class="prompt-char">$</span>
+                    <h2 class="command-text">whoami</h2>
+                </div>
+                <div class="grid md:grid-cols-5 gap-12 items-center">
+                    <div class="md:col-span-3">
+                        <p class="text-text-secondary mb-4">
+                            I'm a Texas-based Software Developer with over 4 years of experience in crafting robust, cloud-native distributed systems. My passion lies at the intersection of backend engineering and artificial intelligence, where I leverage my skills in Python, AWS, and machine learning to build high-performance, intelligent applications.
+                        </p>
+                        <p class="text-text-secondary">
+                            From optimizing data pipelines to deploying scalable microservices, I thrive on solving complex problems and turning innovative ideas into reality. I'm driven by a desire to build systems that are not only efficient but also intelligent, pushing the boundaries of what's possible.
+                        </p>
+                    </div>
+                    <div class="md:col-span-2">
+                         <div class="glass-card p-2 aspect-square">
+                            <img src="https://placehold.co/500x500/000005/ff4b1f?text=VC" alt="Vinay Chanda" class="rounded-lg w-full h-full object-cover">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Experience Section -->
+            <section id="experience" class="section">
+                <div class="section-header">
+                    <span class="prompt-char">$</span>
+                    <h2 class="command-text">cat ./career.log</h2>
+                </div>
+                <div class="relative timeline ml-4 pl-8">
+                    <div class="timeline-item mb-12">
+                        <div class="dot"></div>
+                        <p class="text-sm text-primary-glow mb-1">Feb 2023 - Present</p>
+                        <h3 class="text-2xl font-bold">Software Developer</h3>
+                        <p class="text-text-secondary mb-4">Cognitive Health, USA</p>
+                        <ul class="list-disc list-inside text-text-secondary space-y-2">
+                            <li>Engineered and deployed scalable microservices on AWS using Python, Docker, and Kubernetes.</li>
+                            <li>Optimized REST APIs to improve data processing throughput by 25%.</li>
+                            <li>Implemented ML-driven forecasting models, enhancing operational planning accuracy by 15%.</li>
+                        </ul>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="dot"></div>
+                        <p class="text-sm text-primary-glow mb-1">Jan 2020 - June 2022</p>
+                        <h3 class="text-2xl font-bold">Software Developer</h3>
+                        <p class="text-text-secondary mb-4">ACS Solutions, India</p>
+                        <ul class="list-disc list-inside text-text-secondary space-y-2">
+                            <li>Contributed to backend development for enterprise-scale distributed microservices.</li>
+                            <li>Assisted with multi-cloud deployments on AWS and Azure using Docker.</li>
+                            <li>Optimized SQL queries to significantly improve data retrieval efficiency.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Projects Section -->
+            <section id="projects" class="section">
+                <div class="section-header">
+                    <span class="prompt-char">$</span>
+                    <h2 class="command-text">ls ./projects</h2>
+                </div>
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div class="glass-card p-6 project-trigger" data-project-id="chatbot">
+                        <i data-lucide="bot" class="w-10 h-10 mb-4" style="color: var(--primary-glow);"></i>
+                        <h3 class="text-xl font-bold mb-2">AI Chatbot</h3>
+                        <p class="text-text-secondary">Serverless architecture on AWS handling 10,000+ daily requests with optimized prompt engineering.</p>
+                    </div>
+                    <div class="glass-card p-6 project-trigger" data-project-id="pipeline">
+                        <i data-lucide="database-zap" class="w-10 h-10 mb-4" style="color: var(--primary-glow);"></i>
+                        <h3 class="text-xl font-bold mb-2">Predictive Data Pipeline</h3>
+                        <p class="text-text-secondary">ETL workflows processing multi-GB datasets, reducing ML model training time by 40%.</p>
+                    </div>
+                    <div class="glass-card p-6 project-trigger" data-project-id="parser">
+                        <i data-lucide="file-scan" class="w-10 h-10 mb-4" style="color: var(--primary-glow);"></i>
+                        <h3 class="text-xl font-bold mb-2">Intelligent Resume Parser</h3>
+                        <p class="text-text-secondary">An NLP-powered system to accurately parse and extract key information from resumes.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Skills Section -->
+            <section id="skills" class="section">
+                <div class="section-header">
+                    <span class="prompt-char">$</span>
+                    <h2 class="command-text">./get_skills.sh</h2>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+                    <div>
+                        <h3 class="text-xl font-bold mb-4">Languages</h3>
+                        <ul class="space-y-2 text-text-secondary">
+                            <li>Python</li>
+                            <li>JavaScript / TypeScript</li>
+                            <li>SQL</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold mb-4">Backend</h3>
+                        <ul class="space-y-2 text-text-secondary">
+                            <li>Node.js / Express</li>
+                            <li>Flask / FastAPI</li>
+                            <li>Django</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold mb-4">Cloud & DevOps</h3>
+                        <ul class="space-y-2 text-text-secondary">
+                            <li>AWS</li>
+                            <li>Docker / Kubernetes</li>
+                            <li>Terraform / IaC</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold mb-4">AI / ML</h3>
+                        <ul class="space-y-2 text-text-secondary">
+                            <li>PyTorch / TensorFlow</li>
+                            <li>Scikit-learn</li>
+                            <li>LLM Integration</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Contact Section -->
+            <section id="contact" class="section text-center">
+                <div class="section-header justify-center">
+                    <span class="prompt-char">$</span>
+                    <h2 class="command-text">contact --now</h2>
+                </div>
+                <p class="text-text-secondary max-w-2xl mx-auto mb-8">
+                    I'm currently seeking new opportunities and am open to collaboration. If you have an interesting project or role, I'd love to connect.
+                </p>
+                <a href="https://mail.google.com/mail/?view=cm&fs=1&to=vinaychanda07@gmail.com" target="_blank" rel="noopener noreferrer" class="glow-button inline-block">Get In Touch</a>
+                <div class="flex justify-center items-center space-x-8 mt-12">
+                    <a href="https://github.com/vinaychanda" target="_blank" class="text-text-secondary hover:text-primary-glow transition-colors"><i data-lucide="github" class="w-8 h-8"></i></a>
+                    <a href="https://www.linkedin.com/in/vinay-c-1212bch5003/" target="_blank" class="text-text-secondary hover:text-primary-glow transition-colors"><i data-lucide="linkedin" class="w-8 h-8"></i></a>
+                    <a href="https://mail.google.com/mail/?view=cm&fs=1&to=vinaychanda07@gmail.com" target="_blank" rel="noopener noreferrer" class="text-text-secondary hover:text-primary-glow transition-colors flex items-center space-x-2">
+                        <i data-lucide="mail" class="w-8 h-8"></i>
+                        <span>vinaychanda07@gmail.com</span>
+                    </a>
+                </div>
+            </section>
+        </div>
+        
+        <footer class="text-center py-8 text-text-secondary text-sm">
+            <p>&copy; 2025 Vinay Chanda. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <!-- Project Modal -->
+    <div id="project-modal-overlay">
+        <div id="project-modal-content" class="glass-card p-8 relative">
+            <button id="modal-close-btn" class="absolute top-4 right-4 text-text-secondary hover:text-primary-glow">
+                <i data-lucide="x" class="w-8 h-8"></i>
+            </button>
+            <h3 id="modal-title" class="text-3xl font-bold mb-4 text-primary-glow"></h3>
+            <p id="modal-description" class="text-text-secondary mb-6"></p>
+            <h4 class="text-xl font-semibold mb-3">Technologies Used:</h4>
+            <div id="modal-tech-list" class="flex flex-wrap gap-3"></div>
+        </div>
+    </div>
+
+    <!-- AI Assistant -->
+    <div id="chat-fab">
+        <i data-lucide="message-circle" class="w-8 h-8 text-black"></i>
+    </div>
+    <div id="chat-window" class="glass-card flex flex-col p-4">
+        <div class="flex justify-between items-center mb-2">
+            <h3 class="text-lg font-bold">AI Assistant</h3>
+            <button id="chat-close-btn" class="text-text-secondary hover:text-primary-glow">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+        </div>
+        <div id="chat-messages" class="flex-grow p-2 flex flex-col space-y-2">
+            <!-- Messages will be injected here -->
+        </div>
+        <div class="flex items-center mt-2">
+            <input type="text" id="chat-input" class="flex-grow rounded-lg p-2 mr-2 focus:outline-none focus:ring-2 focus:ring-primary-glow" placeholder="Ask me anything...">
+            <button id="chat-send-btn" class="bg-primary-glow p-2 rounded-lg text-black">
+                <i data-lucide="send" class="w-5 h-5"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Advanced Loader & Transition ---
+            const loader = document.getElementById('loader');
+            const loaderText = document.getElementById('loader-text');
+            const transitionOverlay = document.getElementById('transition-overlay');
+            const contentWrapper = document.querySelector('.content-wrapper');
+            const statuses = [
+                "DECOMPILING CORE...", "CALIBRATING VECTORS...", "INJECTING NEURAL SYNC...",
+                "ASSEMBLING GEOMETRIES...", "RENDERING REALITY...", "SYSTEM READY"
+            ];
+            
+            let statusIndex = 0;
+            const interval = setInterval(() => {
+                loaderText.textContent = statuses[statusIndex];
+                statusIndex++;
+                if (statusIndex === statuses.length) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        loader.style.opacity = '0';
+                        setTimeout(() => {
+                            loader.style.display = 'none';
+                            transitionOverlay.style.display = 'flex';
+                            setTimeout(() => {
+                                transitionOverlay.style.opacity = '0';
+                                contentWrapper.style.opacity = '1';
+                                setTimeout(() => transitionOverlay.style.display = 'none', 500);
+                            }, 2000);
+                        }, 750);
+                    }, 1000);
+                }
+            }, 600);
+
+
+            lucide.createIcons();
+
+            // --- 3D Hero Animation ---
+            let scene, camera, renderer, stars, starGeo, mouseX = 0, mouseY = 0;
+
+            function init() {
+                scene = new THREE.Scene();
+                camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000);
+                camera.position.z = 1;
+
+                renderer = new THREE.WebGLRenderer({
+                    canvas: document.getElementById("hero-canvas"),
+                    alpha: true
+                });
+                renderer.setSize(window.innerWidth, window.innerHeight);
+
+                starGeo = new THREE.BufferGeometry();
+                const starCoords = [];
+                for (let i = 0; i < 6000; i++) {
+                    starCoords.push(
+                        Math.random() * 600 - 300,
+                        Math.random() * 600 - 300,
+                        Math.random() * 600 - 300
+                    );
+                }
+                starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starCoords, 3));
+
+                let sprite = new THREE.TextureLoader().load('https://threejs.org/examples/textures/sprites/disc.png');
+                let starMaterial = new THREE.PointsMaterial({
+                    color: 0xaaaaaa,
+                    size: 0.7,
+                    map: sprite
+                });
+
+                stars = new THREE.Points(starGeo, starMaterial);
+                scene.add(stars);
+
+                document.addEventListener('mousemove', onMouseMove, false);
+                window.addEventListener("resize", onWindowResize, false);
+                animate();
+            }
+
+            function onMouseMove(event) {
+                mouseX = (event.clientX - window.innerWidth / 2) / 1000;
+                mouseY = (event.clientY - window.innerHeight / 2) / 1000;
+            }
+
+            function onWindowResize() {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+
+            function animate() {
+                stars.rotation.y += 0.0002;
+                
+                camera.position.x += (mouseX - camera.position.x) * 0.05;
+                camera.position.y += (-mouseY - camera.position.y) * 0.05;
+                camera.lookAt(scene.position);
+
+
+                renderer.render(scene, camera);
+                requestAnimationFrame(animate);
+            }
+            init();
+
+            // --- Header Scroll Effect ---
+            const header = document.getElementById('main-header');
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 50) {
+                    header.style.backgroundColor = 'rgba(0, 0, 5, 0.8)';
+                    header.style.backdropFilter = 'blur(10px)';
+                } else {
+                    header.style.backgroundColor = 'transparent';
+                    header.style.backdropFilter = 'none';
+                }
+            });
+            
+            // --- Mobile Menu ---
+            const menuBtn = document.getElementById('menu-btn');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const mobileLinks = mobileMenu.querySelectorAll('a');
+            menuBtn.addEventListener('click', () => {
+                const isOpen = mobileMenu.classList.contains('flex');
+                if (isOpen) {
+                    mobileMenu.classList.remove('flex');
+                    mobileMenu.classList.add('hidden');
+                } else {
+                    mobileMenu.classList.remove('hidden');
+                    mobileMenu.classList.add('flex');
+                }
+            });
+            mobileLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    mobileMenu.classList.remove('flex');
+                    mobileMenu.classList.add('hidden');
+                });
+            });
+
+            // --- Scroll Animations ---
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const section = entry.target;
+                        section.classList.add('visible');
+                        
+                        const commandEl = section.querySelector('.command-text');
+                        if (commandEl && !commandEl.dataset.animated) {
+                            const commandText = commandEl.textContent;
+                            commandEl.style.setProperty('--steps', commandText.length);
+                            commandEl.dataset.animated = 'true';
+                        }
+                    }
+                });
+            }, { threshold: 0.2 });
+
+            document.querySelectorAll('.section').forEach(section => {
+                observer.observe(section);
+            });
+
+            // --- Active Nav Link on Scroll ---
+            const sections = document.querySelectorAll('section');
+            const navLinks = document.querySelectorAll('.nav-link');
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 100) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href').includes(current)) {
+                        link.classList.add('active');
+                    }
+                });
+            });
+
+            // --- Project Modal Functionality ---
+            const projectData = {
+                chatbot: {
+                    title: "AI Chatbot with Prompt Engineering",
+                    description: "Designed and implemented a highly scalable, serverless chatbot architecture using AWS Lambda and API Gateway, capable of handling over 10,000 requests per day cost-efficiently. I developed robust logging and monitoring pipelines to track performance and implemented advanced prompt engineering techniques, which improved response consistency and reduced model hallucinations by 20%.",
+                    technologies: ["Python", "AWS Lambda", "API Gateway", "Prompt Engineering", "LLMs", "Serverless"]
+                },
+                pipeline: {
+                    title: "Data Pipeline for Predictive Analytics",
+                    description: "Engineered complex ETL (Extract, Transform, Load) workflows to process multi-gigabyte datasets, which successfully reduced the training time for machine learning models by 40%. The pipeline was integrated with AWS S3 and RDS for scalable and secure data storage and retrieval, and featured automated monitoring and retry mechanisms to ensure over 99% reliability in production environments.",
+                    technologies: ["Python", "ETL", "AWS S3", "AWS RDS", "Pandas", "Data Modeling"]
+                },
+                parser: {
+                    title: "Intelligent Resume Parser",
+                    description: "Developed an intelligent system to parse and extract key information from various resume formats. This project utilized Natural Language Processing (NLP) techniques to identify and categorize data such as contact information, work experience, skills, and education, streamlining the recruitment process.",
+                    technologies: ["Python", "NLP", "Scikit-learn", "FastAPI", "Regular Expressions"]
+                }
+            };
+
+            const modalOverlay = document.getElementById('project-modal-overlay');
+            const modalTitle = document.getElementById('modal-title');
+            const modalDescription = document.getElementById('modal-description');
+            const modalTechList = document.getElementById('modal-tech-list');
+            const modalCloseBtn = document.getElementById('modal-close-btn');
+            const projectTriggers = document.querySelectorAll('.project-trigger');
+
+            function openModal(projectId) {
+                const data = projectData[projectId];
+                if (!data) return;
+
+                modalTitle.textContent = data.title;
+                modalDescription.textContent = data.description;
+                modalTechList.innerHTML = '';
+
+                data.technologies.forEach(tech => {
+                    const tag = document.createElement('span');
+                    tag.className = 'modal-tech-tag';
+                    tag.textContent = tech;
+                    modalTechList.appendChild(tag);
+                });
+                
+                modalOverlay.classList.add('active');
+            }
+
+            function closeModal() {
+                modalOverlay.classList.remove('active');
+            }
+
+            projectTriggers.forEach(card => {
+                card.addEventListener('click', () => {
+                    openModal(card.dataset.projectId);
+                });
+            });
+
+            modalCloseBtn.addEventListener('click', closeModal);
+            modalOverlay.addEventListener('click', (e) => {
+                if (e.target === modalOverlay) {
+                    closeModal();
+                }
+            });
+            
+            // --- AI Assistant Chatbot ---
+            const chatFab = document.getElementById('chat-fab');
+            const chatWindow = document.getElementById('chat-window');
+            const chatCloseBtn = document.getElementById('chat-close-btn');
+            const chatMessages = document.getElementById('chat-messages');
+            const chatInput = document.getElementById('chat-input');
+            const chatSendBtn = document.getElementById('chat-send-btn');
+
+            chatFab.addEventListener('click', () => chatWindow.classList.add('active'));
+            chatCloseBtn.addEventListener('click', () => chatWindow.classList.remove('active'));
+
+            const botResponses = {
+                greeting: "Hello! I'm Vinay's AI assistant. You can ask me about his skills, experience, or projects. Type 'help' for a list of commands.",
+                help: "You can ask me about: 'skills', 'experience', 'projects', 'contact', or 'location'.",
+                skills: "Vinay is skilled in Python, JavaScript/TypeScript, AWS, Docker, Kubernetes, Terraform, PyTorch, TensorFlow, and LLM integration.",
+                experience: "Vinay has over 4 years of experience, currently at Cognitive Health and previously at ACS Solutions, focusing on scalable microservices and AI/ML model implementation.",
+                projects: "He has built an AI Chatbot, a Predictive Data Pipeline, and an Intelligent Resume Parser. You can click on the project cards for more details.",
+                contact: "You can reach Vinay at vinaychanda07@gmail.com or connect on LinkedIn. The links are in the contact section.",
+                location: "Vinay is based in Texas, USA.",
+                default: "I'm not sure how to answer that. Please try asking about 'skills', 'experience', 'projects', or 'contact'. You can also type 'help'."
+            };
+
+            function addMessage(text, sender) {
+                const messageEl = document.createElement('div');
+                messageEl.className = `chat-message ${sender}-message`;
+                
+                if (sender === 'bot') {
+                    messageEl.textContent = '';
+                    let i = 0;
+                    const typingInterval = setInterval(() => {
+                        if (i < text.length) {
+                            messageEl.textContent += text.charAt(i);
+                            i++;
+                            chatMessages.scrollTop = chatMessages.scrollHeight;
+                        } else {
+                            clearInterval(typingInterval);
+                        }
+                    }, 30);
+                } else {
+                    messageEl.textContent = text;
+                }
+                
+                chatMessages.appendChild(messageEl);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            function getBotResponse(userInput) {
+                const lowerInput = userInput.toLowerCase();
+                if (lowerInput.includes('hello') || lowerInput.includes('hi')) return botResponses.greeting;
+                if (lowerInput.includes('skill')) return botResponses.skills;
+                if (lowerInput.includes('experi')) return botResponses.experience;
+                if (lowerInput.includes('project')) return botResponses.projects;
+                if (lowerInput.includes('contact') || lowerInput.includes('email')) return botResponses.contact;
+                if (lowerInput.includes('locat') || lowerInput.includes('where')) return botResponses.location;
+                if (lowerInput.includes('help')) return botResponses.help;
+                return botResponses.default;
+            }
+
+            function handleSendMessage() {
+                const userInput = chatInput.value.trim();
+                if (userInput === '') return;
+                
+                addMessage(userInput, 'user');
+                chatInput.value = '';
+
+                setTimeout(() => {
+                    const botResponse = getBotResponse(userInput);
+                    addMessage(botResponse, 'bot');
+                }, 500);
+            }
+
+            chatSendBtn.addEventListener('click', handleSendMessage);
+            chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    handleSendMessage();
+                }
+            });
+            
+            // Initial greeting
+            setTimeout(() => {
+                if (!chatWindow.classList.contains('active')) {
+                     addMessage(botResponses.greeting, 'bot');
+                }
+            }, 1000);
+
+        });
+    </script>
+</body>
+</html>
