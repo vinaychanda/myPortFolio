@@ -13,13 +13,13 @@
     <style>
         :root {
             --bg-color: #000005;
-            --primary-glow: #ff4b1f; /* Crimson */
-            --secondary-glow: #ffca28; /* Gold */
+            --primary-glow: #00f2ea;
+            --secondary-glow: #c155ff;
             --text-primary: #e0e0e0;
             --text-secondary: #a0a0a0;
             --glass-bg: rgba(10, 10, 20, 0.4);
             --border-color: rgba(255, 255, 255, 0.1);
-            --prompt-color: #ffd700; /* Gold for prompt */
+            --prompt-color: #79c0ff;
         }
         html {
             scroll-behavior: smooth;
@@ -54,7 +54,7 @@
         }
         .glass-card:hover {
             transform: translateY(-8px);
-            box-shadow: 0 0 30px rgba(255, 75, 31, 0.2), 0 0 50px rgba(255, 202, 40, 0.1);
+            box-shadow: 0 0 30px rgba(0, 242, 234, 0.2), 0 0 50px rgba(193, 85, 255, 0.1);
         }
         .nav-link {
             position: relative;
@@ -132,74 +132,60 @@
             z-index: 1000;
             background-color: var(--bg-color);
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            transition: opacity 0.75s ease-out;
-            font-family: 'Fira Code', monospace;
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
         }
-        .orb-container {
-            perspective: 1000px;
-        }
-        .orb {
-            width: 150px;
-            height: 150px;
+        .solar-system {
+            width: 250px;
+            height: 250px;
             position: relative;
             transform-style: preserve-3d;
-            animation: orb-rotate 20s infinite linear;
+            animation: solar-system-rotate 20s infinite linear;
         }
-        .orb-ring {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border: 2px solid var(--primary-glow);
-            border-radius: 50%;
-            box-shadow: 0 0 20px var(--primary-glow), inset 0 0 20px var(--primary-glow);
-            animation: orb-unfold 4s ease-in-out infinite alternate;
-        }
-        .orb-ring:nth-child(2) {
-            transform: rotateY(60deg);
-            animation-delay: -1s;
-            border-color: var(--secondary-glow);
-            box-shadow: 0 0 20px var(--secondary-glow), inset 0 0 20px var(--secondary-glow);
-        }
-        .orb-ring:nth-child(3) {
-            transform: rotateY(-60deg);
-            animation-delay: -2s;
-        }
-        .orb-core {
-            width: 30px;
-            height: 30px;
-            background: var(--primary-glow);
+        .sun {
+            width: 60px;
+            height: 60px;
+            background-color: var(--primary-glow);
             border-radius: 50%;
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             box-shadow: 0 0 30px var(--primary-glow), 0 0 50px var(--primary-glow);
-            animation: core-pulse 2s infinite ease-in-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Fira Code', monospace;
+            font-weight: bold;
+            font-size: 24px;
+            color: var(--bg-color);
+            animation: sun-pulse 3s infinite ease-in-out;
         }
-        @keyframes orb-rotate {
-            from { transform: rotateY(0deg) rotateX(20deg); }
-            to { transform: rotateY(360deg) rotateX(20deg); }
+        .orbit {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            transform-style: preserve-3d;
+            animation: orbit-path 10s infinite linear;
         }
-        @keyframes orb-unfold {
-            from { transform: scale(0.1) rotateY(0deg); opacity: 0; }
-            to { transform: scale(1) rotateY(360deg); opacity: 1; }
+        .planet {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            border-radius: 50%;
+            transform-style: preserve-3d;
         }
-        @keyframes core-pulse {
-            0% { transform: translate(-50%, -50%) scale(1); }
-            50% { transform: translate(-50%, -50%) scale(1.2); box-shadow: 0 0 40px var(--primary-glow), 0 0 70px var(--primary-glow); }
-            100% { transform: translate(-50%, -50%) scale(1); }
+        @keyframes solar-system-rotate {
+            to { transform: rotateY(360deg); }
         }
-        .loader-text {
-            margin-top: 2rem;
-            color: var(--text-secondary);
-            letter-spacing: 0.2em;
-            font-size: 0.875rem;
-            min-height: 1.25rem;
+        @keyframes sun-pulse {
+            50% { transform: translate(-50%, -50%) scale(1.1); }
+        }
+        @keyframes orbit-path {
+            to { transform: translate(-50%, -50%) rotateZ(360deg); }
         }
 
         #transition-overlay {
@@ -216,12 +202,17 @@
         }
         .glitch-text {
             font-family: 'Inter', sans-serif;
-            font-size: 5rem;
+            font-size: 3rem;
             font-weight: 900;
             letter-spacing: -0.05em;
             color: var(--text-primary);
             position: relative;
-            animation: glitch-scan 2s linear forwards;
+            animation: glitch-scan 1.5s linear forwards;
+        }
+        @media (min-width: 768px) {
+            .glitch-text {
+                font-size: 5rem;
+            }
         }
         .glitch-text::before,
         .glitch-text::after {
@@ -237,12 +228,12 @@
         .glitch-text::before {
             left: 2px;
             text-shadow: -2px 0 var(--primary-glow);
-            animation: glitch-anim-1 1.5s infinite linear alternate-reverse;
+            animation: glitch-anim-1 1s infinite linear alternate-reverse;
         }
         .glitch-text::after {
             left: -2px;
             text-shadow: -2px 0 var(--secondary-glow);
-            animation: glitch-anim-2 1.5s infinite linear alternate-reverse;
+            animation: glitch-anim-2 1s infinite linear alternate-reverse;
         }
         @keyframes glitch-anim-1 {
             0% { clip-path: inset(12% 0 85% 0); } 20% { clip-path: inset(78% 0 3% 0); } 40% { clip-path: inset(23% 0 45% 0); }
@@ -295,12 +286,12 @@
         }
         .prompt-char {
             color: var(--prompt-color);
-            font-size: 2.25rem;
+            font-size: 1.875rem;
             font-weight: 700;
         }
         .command-text {
             font-family: 'Fira Code', monospace;
-            font-size: 2.25rem;
+            font-size: 1.875rem;
             font-weight: 600;
             color: var(--primary-glow);
             white-space: nowrap;
@@ -308,6 +299,11 @@
             width: max-content;
             max-width: 0;
             border-right: .15em solid var(--primary-glow);
+        }
+        @media (min-width: 768px) {
+            .prompt-char, .command-text {
+                font-size: 2.25rem;
+            }
         }
         .section.visible .command-text {
             animation:
@@ -324,7 +320,7 @@
         }
         .modal-tech-tag {
             font-family: 'Fira Code', monospace;
-            background-color: rgba(255, 75, 31, 0.1);
+            background-color: rgba(0, 242, 234, 0.1);
             color: var(--primary-glow);
             font-size: 0.875rem;
             font-weight: 500;
@@ -332,7 +328,6 @@
             border-radius: 9999px;
         }
 
-        /* --- AI Assistant Chatbot --- */
         #chat-fab {
             position: fixed;
             bottom: 2rem;
@@ -364,7 +359,8 @@
             bottom: 7rem;
             right: 2rem;
             z-index: 90;
-            width: 350px;
+            width: 90%;
+            max-width: 350px;
             height: 450px;
             opacity: 0;
             transform: translateY(20px);
@@ -404,24 +400,60 @@
             border: 1px solid var(--border-color);
             color: var(--text-primary);
         }
+
+        .vc-image {
+            cursor: pointer;
+        }
+        #code-construct-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 998;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .code-char {
+            position: absolute;
+            font-family: 'Fira Code', monospace;
+            font-size: 1.25rem;
+            will-change: transform, opacity;
+        }
+        @keyframes code-fly {
+            0% { transform: translate(0, 0) scale(0.5); opacity: 1; }
+            100% { transform: var(--transform-end) scale(1.5); opacity: 0; }
+        }
+
+        .skill-card {
+            padding: 1.5rem;
+        }
+        .skill-card h3 {
+            font-family: 'Fira Code', monospace;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        .skill-card ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .skill-card li {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
     </style>
 </head>
 <body>
     <div id="loader">
-        <div class="orb-container">
-            <div class="orb">
-                <div class="orb-ring"></div>
-                <div class="orb-ring"></div>
-                <div class="orb-ring"></div>
-                <div class="orb-core"></div>
-            </div>
+        <div class="solar-system">
+            <div class="sun">VC</div>
         </div>
-        <p class="loader-text" id="loader-text"></p>
     </div>
 
     <div id="transition-overlay" style="display: none;">
         <h1 class="glitch-text">Vinay Chanda</h1>
     </div>
+    
+    <div id="code-construct-overlay"></div>
 
     <canvas id="hero-canvas"></canvas>
     
@@ -477,14 +509,14 @@
                 <div class="grid md:grid-cols-5 gap-12 items-center">
                     <div class="md:col-span-3">
                         <p class="text-text-secondary mb-4">
-                            I'm a Texas-based Software Developer with over 4 years of experience in crafting robust, cloud-native distributed systems. My passion lies at the intersection of backend engineering and artificial intelligence, where I leverage my skills in Python, AWS, and machine learning to build high-performance, intelligent applications.
+                           Professional Software Engineer with 4+ years of experience designing, developing, and deploying scalable, cloud-native distributed systems. Skilled in Python, JavaScript/TypeScript, AWS, GCP, Azure and AI/ML integration, with expertise in microservices, containerization, CI/CD, and infrastructure as code.
                         </p>
                         <p class="text-text-secondary">
-                            From optimizing data pipelines to deploying scalable microservices, I thrive on solving complex problems and turning innovative ideas into reality. I'm driven by a desire to build systems that are not only efficient but also intelligent, pushing the boundaries of what's possible.
+                           Adept at collaborating with data scientists, product managers, and operations teams to translate complex business challenges into innovative solutions, with a strong interest in applying these principles to solve challenges at an unprecedented scale. Experienced in mentoring junior engineers and driving technical excellence.
                         </p>
                     </div>
                     <div class="md:col-span-2">
-                         <div class="glass-card p-2 aspect-square">
+                         <div class="glass-card p-2 aspect-square vc-image">
                             <img src="https://placehold.co/500x500/000005/ff4b1f?text=VC" alt="Vinay Chanda" class="rounded-lg w-full h-full object-cover">
                         </div>
                     </div>
@@ -501,23 +533,24 @@
                     <div class="timeline-item mb-12">
                         <div class="dot"></div>
                         <p class="text-sm text-primary-glow mb-1">Feb 2023 - Present</p>
-                        <h3 class="text-2xl font-bold">Software Developer</h3>
+                        <h3 class="text-2xl font-bold">Software Engineer</h3>
                         <p class="text-text-secondary mb-4">Cognitive Health, USA</p>
                         <ul class="list-disc list-inside text-text-secondary space-y-2">
-                            <li>Engineered and deployed scalable microservices on AWS using Python, Docker, and Kubernetes.</li>
-                            <li>Optimized REST APIs to improve data processing throughput by 25%.</li>
-                            <li>Implemented ML-driven forecasting models, enhancing operational planning accuracy by 15%.</li>
+                            <li>Led the end-to-end deployment of machine learning models into production, bridging the gap between data science and engineering.</li>
+                            <li>Architected and deployed scalable, high-availability microservices on AWS using Python, Docker, and Kubernetes.</li>
+                            <li>Engineered fault-tolerant REST APIs for real-time, large-scale data integration, improving data processing throughput by 25%.</li>
+                            <li>Automated infrastructure provisioning and application deployments using Terraform and CI/CD pipelines.</li>
                         </ul>
                     </div>
                     <div class="timeline-item">
                         <div class="dot"></div>
                         <p class="text-sm text-primary-glow mb-1">Jan 2020 - June 2022</p>
-                        <h3 class="text-2xl font-bold">Software Developer</h3>
+                        <h3 class="text-2xl font-bold">Software Engineer</h3>
                         <p class="text-text-secondary mb-4">ACS Solutions, India</p>
                         <ul class="list-disc list-inside text-text-secondary space-y-2">
-                            <li>Contributed to backend development for enterprise-scale distributed microservices.</li>
-                            <li>Assisted with multi-cloud deployments on AWS and Azure using Docker.</li>
-                            <li>Optimized SQL queries to significantly improve data retrieval efficiency.</li>
+                            <li>Contributed to backend development of distributed microservices using Python and Node.js.</li>
+                            <li>Built and maintained scalable RESTful APIs using Flask and Django.</li>
+                            <li>Assisted with AWS and Azure deployments, including containerization with Docker and orchestration with Kubernetes.</li>
                         </ul>
                     </div>
                 </div>
@@ -554,37 +587,47 @@
                     <span class="prompt-char">$</span>
                     <h2 class="command-text">./get_skills.sh</h2>
                 </div>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
-                    <div>
-                        <h3 class="text-xl font-bold mb-4">Languages</h3>
-                        <ul class="space-y-2 text-text-secondary">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <div class="glass-card skill-card">
+                        <h3 class="text-xl text-primary-glow">Programming & Frameworks</h3>
+                        <ul>
                             <li>Python</li>
                             <li>JavaScript / TypeScript</li>
-                            <li>SQL</li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h3 class="text-xl font-bold mb-4">Backend</h3>
-                        <ul class="space-y-2 text-text-secondary">
-                            <li>Node.js / Express</li>
+                            <li>Node.js</li>
+                            <li>React</li>
                             <li>Flask / FastAPI</li>
                             <li>Django</li>
                         </ul>
                     </div>
-                    <div>
-                        <h3 class="text-xl font-bold mb-4">Cloud & DevOps</h3>
-                        <ul class="space-y-2 text-text-secondary">
-                            <li>AWS</li>
-                            <li>Docker / Kubernetes</li>
-                            <li>Terraform / IaC</li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h3 class="text-xl font-bold mb-4">AI / ML</h3>
-                        <ul class="space-y-2 text-text-secondary">
+                     <div class="glass-card skill-card">
+                        <h3 class="text-xl text-primary-glow">AI & Machine Learning</h3>
+                        <ul>
+                            <li>Model Development</li>
+                            <li>Predictive Analytics</li>
+                            <li>LLM Integration</li>
+                            <li>Prompt Engineering</li>
                             <li>PyTorch / TensorFlow</li>
                             <li>Scikit-learn</li>
-                            <li>LLM Integration</li>
+                        </ul>
+                    </div>
+                     <div class="glass-card skill-card">
+                        <h3 class="text-xl text-primary-glow">Cloud & Infrastructure</h3>
+                        <ul>
+                            <li>AWS (Lambda, S3, EC2, EKS)</li>
+                            <li>Azure, GCP</li>
+                            <li>Terraform (IaC)</li>
+                            <li>Docker / Kubernetes</li>
+                            <li>CI/CD Pipelines</li>
+                        </ul>
+                    </div>
+                     <div class="glass-card skill-card">
+                        <h3 class="text-xl text-primary-glow">Databases & DevOps</h3>
+                        <ul>
+                            <li>SQL (MySQL, PostgreSQL)</li>
+                            <li>NoSQL (MongoDB, DynamoDB)</li>
+                            <li>ETL Pipelines</li>
+                            <li>Microservices</li>
+                            <li>Monitoring (Splunk, Grafana)</li>
                         </ul>
                     </div>
                 </div>
@@ -655,34 +698,48 @@
         document.addEventListener('DOMContentLoaded', () => {
             // --- Advanced Loader & Transition ---
             const loader = document.getElementById('loader');
-            const loaderText = document.getElementById('loader-text');
             const transitionOverlay = document.getElementById('transition-overlay');
             const contentWrapper = document.querySelector('.content-wrapper');
-            const statuses = [
-                "DECOMPILING CORE...", "CALIBRATING VECTORS...", "INJECTING NEURAL SYNC...",
-                "ASSEMBLING GEOMETRIES...", "RENDERING REALITY...", "SYSTEM READY"
-            ];
+            const solarSystem = document.querySelector('.solar-system');
             
-            let statusIndex = 0;
-            const interval = setInterval(() => {
-                loaderText.textContent = statuses[statusIndex];
-                statusIndex++;
-                if (statusIndex === statuses.length) {
-                    clearInterval(interval);
+            const planetsData = [
+                { size: 12, distance: 80, speed: 8, color: 'var(--secondary-glow)' },
+                { size: 8, distance: 110, speed: 5, color: 'var(--text-secondary)' },
+                { size: 10, distance: 140, speed: 3, color: '#ff4b1f' }
+            ];
+
+            planetsData.forEach((p, i) => {
+                const orbit = document.createElement('div');
+                orbit.className = 'orbit';
+                orbit.style.width = `${p.distance * 2}px`;
+                orbit.style.height = `${p.distance * 2}px`;
+                orbit.style.animationDuration = `${p.speed}s`;
+                orbit.style.transform = `translate(-50%, -50%) rotateX(70deg) rotateZ(${Math.random() * 360}deg)`;
+
+                const planet = document.createElement('div');
+                planet.className = 'planet';
+                planet.style.width = `${p.size}px`;
+                planet.style.height = `${p.size}px`;
+                planet.style.backgroundColor = p.color;
+                planet.style.transform = `translate(-50%, -50%) translateX(${p.distance}px)`;
+
+                orbit.appendChild(planet);
+                solarSystem.appendChild(orbit);
+            });
+            
+            setTimeout(() => {
+                loader.style.transform = 'scale(5)';
+                loader.style.opacity = '0';
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                    transitionOverlay.style.display = 'flex';
                     setTimeout(() => {
-                        loader.style.opacity = '0';
-                        setTimeout(() => {
-                            loader.style.display = 'none';
-                            transitionOverlay.style.display = 'flex';
-                            setTimeout(() => {
-                                transitionOverlay.style.opacity = '0';
-                                contentWrapper.style.opacity = '1';
-                                setTimeout(() => transitionOverlay.style.display = 'none', 500);
-                            }, 2000);
-                        }, 750);
-                    }, 1000);
-                }
-            }, 600);
+                        transitionOverlay.style.opacity = '0';
+                        contentWrapper.style.opacity = '1';
+                        setTimeout(() => transitionOverlay.style.display = 'none', 500);
+                    }, 1500);
+                }, 500);
+            }, 3500);
 
 
             lucide.createIcons();
@@ -971,6 +1028,45 @@
                 }
             }, 1000);
 
+            // --- Code Nebula Effect on VC Image Click ---
+            const vcImage = document.querySelector('.vc-image');
+            const codeConstructOverlay = document.getElementById('code-construct-overlay');
+            let isAnimatingCode = false;
+
+            vcImage.addEventListener('click', (e) => {
+                if (isAnimatingCode) return;
+                isAnimatingCode = true;
+
+                const rect = vcImage.getBoundingClientRect();
+                const startX = rect.left + rect.width / 2;
+                const startY = rect.top + rect.height / 2;
+                
+                const codeChars = ['{}', '=>', '()', '[]', '//', '/*', '*/', '<>', '0', '1', 'const', 'let', '=>', 'async'];
+                for (let i = 0; i < 150; i++) {
+                    const char = document.createElement('span');
+                    char.className = 'code-char';
+                    char.textContent = codeChars[Math.floor(Math.random() * codeChars.length)];
+                    char.style.left = `${startX}px`;
+                    char.style.top = `${startY}px`;
+                    char.style.color = Math.random() > 0.5 ? 'var(--primary-glow)' : 'var(--secondary-glow)';
+                    
+                    const angle = Math.random() * Math.PI * 2;
+                    const radius = Math.random() * 400 + 150;
+                    const endX = Math.cos(angle) * radius;
+                    const endY = Math.sin(angle) * radius;
+                    const rotation = Math.random() * 720 - 360;
+                    
+                    char.style.setProperty('--transform-end', `translate(${endX}px, ${endY}px) rotate(${rotation}deg)`);
+                    char.style.animation = `code-fly ${Math.random() * 2 + 2}s forwards ease-out`;
+                    
+                    codeConstructOverlay.appendChild(char);
+                }
+
+                setTimeout(() => {
+                    codeConstructOverlay.innerHTML = '';
+                    isAnimatingCode = false;
+                }, 4000);
+            });
         });
     </script>
 </body>
